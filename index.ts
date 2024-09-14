@@ -51,7 +51,7 @@ async function convertToEpub(inputFile: string) {
   writeFileSync(tempFile, markdownContent);
 
   // Construct the pandoc command
-  const pandocCommand = `pandoc "${tempFile}" -o "${outputFile}" -f markdown -t epub --metadata title="${title}" ${
+  const pandocCommand = `pandoc -s "${tempFile}" -o "${outputFile}" -f markdown -t epub --metadata title="${title}" ${
     author ? `--metadata author="${author}"` : ""
   }`;
 
