@@ -1,15 +1,14 @@
 # epub_converter
 
-To install dependencies:
+A little command-line utility to convert [GoodLinks](https://goodlinks.app) exports to ePub.
 
 ```bash
 bun install
-```
-
-To run:
-
-```bash
 bun run index.ts
 ```
 
-This project was created using `bun init` in bun v1.1.27. [Bun](https://bun.sh) is a fast all-in-one JavaScript runtime.
+To build as a standalone CLI tool:
+
+```bash
+bun build index.ts --compile --outfile build/epub_converter # just compile
+```
