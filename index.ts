@@ -1,4 +1,4 @@
-import { readFileSync, writeFileSync } from "fs";
+import { readFileSync, writeFileSync, unlinkSync } from "fs";
 import { exec } from "child_process";
 import { dirname, join } from "path";
 
@@ -72,6 +72,7 @@ async function convertToEpub(inputFile: string) {
     }
     console.log(`ePub file created successfully: ${outputFile}`);
   });
+  unlinkSync(tempFile);
 }
 
 const inputFile = process.argv[2];
