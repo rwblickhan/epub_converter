@@ -1,20 +1,31 @@
 import { readFileSync, writeFileSync } from "fs";
 import { exec } from "child_process";
-import { parse } from "yaml";
-import { basename, dirname, join } from "path";
+import { dirname, join } from "path";
 
-// Function to extract YAML frontmatter
-function extractFrontmatter(content: string) {
+// Note: A lot of this was written by Claude
+
+function extractFrontmatter(content: string): Record<string, string> | null {
   const match = content.match(/^---\n([\s\S]*?)\n---/);
-  return match ? parse(match[1]) : {};
+  if (!match) return null;
+
+  const frontmatter: Record<string, string> = {};
+  const lines = match[1].split("\n");
+
+  for (const line of lines) {
+    const [key, ...valueParts] = line.split(":");
+    if (key && valueParts.length) {
+      const value = valueParts.join(":").trim();
+      frontmatter[key.trim().toLowerCase()] = value;
+    }
+  }
+
+  return frontmatter;
 }
 
-// Function to remove YAML frontmatter from content
 function removeFrontmatter(content: string) {
   return content.replace(/^---\n[\s\S]*?\n---\n/, "");
 }
 
-// Function to create a file path-friendly string
 function toFilePathFriendly(str: string) {
   return str
     .toLowerCase()
@@ -24,38 +35,32 @@ function toFilePathFriendly(str: string) {
     .trim();
 }
 
-// Main function to convert Markdown to ePub
 async function convertToEpub(inputFile: string) {
-  // Read the input file
   const content = readFileSync(inputFile, "utf8");
-
-  // Extract frontmatter
   const frontmatter = extractFrontmatter(content);
-  console.log(JSON.stringify(frontmatter));
-  const { Title: title, Author: author } = frontmatter;
+  if (!frontmatter) {
+    console.error("Frontmatter is missing");
+    process.exit(1);
+  }
+  const { title, author } = frontmatter;
 
   if (!title) {
     console.error("Title is missing in the frontmatter");
     process.exit(1);
   }
 
-  // Create output file name based on the title
   const outputFileName = `${toFilePathFriendly(title)}.epub`;
   const outputFile = join(dirname(inputFile), outputFileName);
 
-  // Remove frontmatter from content
   const markdownContent = removeFrontmatter(content);
 
-  // Write the modified content to a temporary file
   const tempFile = join(dirname(inputFile), "temp.md");
   writeFileSync(tempFile, markdownContent);
 
-  // Construct the pandoc command
   const pandocCommand = `pandoc -s "${tempFile}" -o "${outputFile}" -f markdown -t epub --metadata title="${title}" ${
     author ? `--metadata author="${author}"` : ""
   }`;
 
-  // Execute pandoc command
   exec(pandocCommand, (error, stdout, stderr) => {
     if (error) {
       console.error(`Error: ${error.message}`);
@@ -69,15 +74,11 @@ async function convertToEpub(inputFile: string) {
   });
 }
 
-// Get input file from command line arguments
 const inputFile = process.argv[2];
-
 if (!inputFile) {
   console.error(
     "Please provide an input file path as a command-line argument."
   );
   process.exit(1);
 }
-
-// Run the conversion
 convertToEpub(inputFile);
