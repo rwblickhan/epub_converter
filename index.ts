@@ -71,8 +71,8 @@ async function convertToEpub(inputFile: string) {
       return;
     }
     console.log(`ePub file created successfully: ${outputFile}`);
+    unlinkSync(tempFile);
   });
-  unlinkSync(tempFile);
 }
 
 const inputFile = process.argv[2];
